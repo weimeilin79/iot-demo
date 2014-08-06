@@ -1,0 +1,157 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.fusebyexample.activemq</groupId>
+  <artifactId>amqp-example-web</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>war</packaging>
+  
+  <properties>
+	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <activemq-version>5.9.0</activemq-version>
+    <qpid-version>0.22</qpid-version>
+    <slf4j-version>1.6.6</slf4j-version>
+    <log4j-version>1.2.17</log4j-version>
+    <jetty-version>8.1.0.RC5</jetty-version>
+    <jetty-maven-plugin.version>8.1.0.RC5</jetty-maven-plugin.version>
+    <mqttclient-version>1.11-SNAPSHOT</mqttclient-version>
+  </properties>
+    <repositories>
+        <repository>
+            <id>fusesource.releases</id>
+            <name>FuseSource Release Repository</name>
+            <url>http://repo.fusesource.com/nexus/content/repositories/releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>fusesource.releases</id>
+            <name>FuseSource Release Repository</name>
+            <url>http://repo.fusesource.com/nexus/content/repositories/releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+  
+   <dependencies>
+   		
+        <dependency>
+            <groupId>org.apache.qpid</groupId>
+            <artifactId>qpid-amqp-1-0-client-jms</artifactId>
+            <version>${qpid-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-jms_1.1_spec</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        
+		<!-- MQTT Client  -->
+	  	<dependency>
+	  		<groupId>org.fusesource.mqtt-client</groupId>
+	  		<artifactId>mqtt-client</artifactId>
+	  		<version>${mqttclient-version}</version>
+	  	</dependency>
+	  	<dependency>
+	  		<groupId>org.fusesource.mqtt-client</groupId>
+	  		<artifactId>mqtt-client-java1.4-uber</artifactId>
+	  		<version>${mqttclient-version}</version>
+	  	</dependency>
+	  	<dependency>
+	  		<groupId> org.fusesource.hawtbuf</groupId>
+	  		<artifactId>hawtbuf</artifactId>
+	  		<version>1.9</version>
+	  	</dependency>
+        
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j-version}</version>
+        </dependency>
+        
+
+			<!-- For Web Socket API-->
+	    <dependency>
+	      <groupId>org.eclipse.jetty</groupId>
+	      <artifactId>jetty-util</artifactId>
+	      <version>${jetty-version}</version>
+	    </dependency>	
+	    <dependency>
+	      <groupId>org.eclipse.jetty</groupId>
+	      <artifactId>jetty-io</artifactId>
+	      <version>${jetty-version}</version>
+	    </dependency>
+	    <dependency>
+	      <groupId>org.eclipse.jetty</groupId>
+	      <artifactId>jetty-server</artifactId>
+	      <version>${jetty-version}</version>
+	    </dependency>	    
+	    <dependency>
+	      <groupId>org.eclipse.jetty</groupId>
+	      <artifactId>jetty-websocket</artifactId>
+	      <version>${jetty-version}</version>
+	    </dependency>	    
+	    <dependency>
+	      <groupId>org.eclipse.jetty</groupId>
+	      <artifactId>jetty-annotations</artifactId>
+	      <version>${jetty-version}</version>
+	    </dependency>
+	    
+	    <!-- For JSON parsing-->
+	    <dependency>
+		  <groupId>com.google.code.gson</groupId>
+		  <artifactId>gson</artifactId>
+		  <version>2.2.4</version>
+		</dependency>
+    </dependencies>
+    
+    <build>
+    	<pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.2</version>
+            </plugin>  
+            <!-- Jetty Server Starts up-->
+            <plugin>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>${jetty-maven-plugin.version}</version>
+                <configuration>
+                    <connectors>
+                        <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+                            <port>8282</port>
+                            <maxIdleTime>60000</maxIdleTime>
+                        </connector>
+                    </connectors>
+                </configuration>
+            </plugin>
+        </plugins>
+        </pluginManagement>
+        
+        
+    </build>  
+      
+    
+</project>

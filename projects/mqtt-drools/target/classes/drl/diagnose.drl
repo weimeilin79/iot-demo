@@ -1,0 +1,237 @@
+/*
+ * Copyright 2012 Red Hat
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+package org.blogdemo.mqtt.drools;
+
+import org.blogdemo.mqtt.model.TargetPerson;
+import java.util.HashMap;
+
+
+rule "Blood Pressure Diagnose - Normal"
+salience 30
+when
+    $targetPerson : TargetPerson(	bloodPressureCounter[0] != null && 
+    								( bloodPressureCounter[1] == null || bloodPressureCounter[0] >= bloodPressureCounter[1]) && 
+    								( bloodPressureCounter[2] == null || bloodPressureCounter[0] >= bloodPressureCounter[2]) && 
+    								( bloodPressureCounter[3] == null || bloodPressureCounter[0] >= bloodPressureCounter[3]) )
+then
+	$targetPerson.setBloodPressureResult("Your Blood Pressure is normal");
+end
+
+rule "Blood Pressure Diagnose - Prehypertension"
+salience 30
+when
+    $targetPerson : TargetPerson(	bloodPressureCounter[1] != null && 
+    								( bloodPressureCounter[0] == null || bloodPressureCounter[1] >= bloodPressureCounter[0]) && 
+    								( bloodPressureCounter[2] == null || bloodPressureCounter[1] >= bloodPressureCounter[2]) && 
+    								( bloodPressureCounter[3] == null || bloodPressureCounter[1] >= bloodPressureCounter[3]) )
+then
+	$targetPerson.setBloodPressureResult("Your might have Prehypertension, please takecare");
+end
+
+rule "Blood Pressure Diagnose - High Blood Pressure"
+salience 30
+when
+    $targetPerson : TargetPerson(	bloodPressureCounter[2] != null && 
+    								( bloodPressureCounter[0] == null || bloodPressureCounter[2] >= bloodPressureCounter[0]) && 
+    								( bloodPressureCounter[1] == null || bloodPressureCounter[2] >= bloodPressureCounter[1]) && 
+    								( bloodPressureCounter[3] == null || bloodPressureCounter[2] >= bloodPressureCounter[3]) )
+then
+	$targetPerson.setBloodPressureResult("Your might have High Blood Pressure, please consult your doctor");
+end
+
+rule "Blood Pressure Diagnose - Hypertensive Crisis"
+salience 30
+when
+    $targetPerson : TargetPerson(	bloodPressureCounter[3] != null && 
+    								( bloodPressureCounter[0] == null || bloodPressureCounter[3] >= bloodPressureCounter[0]) && 
+    								( bloodPressureCounter[1] == null || bloodPressureCounter[3] >= bloodPressureCounter[1]) && 
+    								( bloodPressureCounter[2] == null || bloodPressureCounter[3] >= bloodPressureCounter[2]) )
+then
+	$targetPerson.setBloodPressureResult("This is serious, you might have Hypertensive Crisis, talk to your doctor immediately");
+end
+
+
+/**Breath Rate Diagnose*/
+
+rule "Breath Rate Diagnose - Slow breathing"
+salience 30
+when
+    $targetPerson : TargetPerson(	breathRateCounter[0] != null && 
+    								( breathRateCounter[1] == null || breathRateCounter[0] >= breathRateCounter[1]) && 
+    								( breathRateCounter[2] == null || breathRateCounter[0] >= breathRateCounter[2]) )
+then
+	$targetPerson.setBreathRateResult("Slow breathing");
+end
+
+rule "Breath Rate Diagnose - Normal"
+salience 30
+when
+    $targetPerson : TargetPerson(	breathRateCounter[1] != null && 
+    								( breathRateCounter[0] == null || breathRateCounter[1] >= breathRateCounter[0]) && 
+    								( breathRateCounter[2] == null || breathRateCounter[1] >= breathRateCounter[2]) )
+then
+	$targetPerson.setBreathRateResult("Normal breathing");
+end
+
+rule "Breath Rate Diagnose - Rapid breathing"
+salience 30
+when
+    $targetPerson : TargetPerson(	breathRateCounter[2] != null && 
+    								( breathRateCounter[0] == null || breathRateCounter[2] >= breathRateCounter[0]) && 
+    								( breathRateCounter[1] == null || breathRateCounter[2] >= breathRateCounter[1]) )
+then
+	$targetPerson.setBreathRateResult("Rapid breathing");
+end
+
+
+/**Heart Rate Diagnose*/
+rule "Heart Rate Diagnose - Normal"
+salience 30
+when
+    $targetPerson : TargetPerson(	heartBeatCounter[0] != null && 
+    								( heartBeatCounter[1] == null || heartBeatCounter[0] >= heartBeatCounter[1]) && 
+    								( heartBeatCounter[2] == null || heartBeatCounter[0] >= heartBeatCounter[2]) && 
+    								( heartBeatCounter[3] == null || heartBeatCounter[0] >= heartBeatCounter[3]) )
+then
+	$targetPerson.setHeartBeatResult("Your Heart Rate is mostly in the rest zone");
+end
+
+rule "Heart Rate - Weight Loss"
+salience 30
+when
+    $targetPerson : TargetPerson(	heartBeatCounter[1] != null && 
+    								( heartBeatCounter[0] == null || heartBeatCounter[1] >= heartBeatCounter[0]) && 
+    								( heartBeatCounter[2] == null || heartBeatCounter[1] >= heartBeatCounter[2]) && 
+    								( heartBeatCounter[3] == null || heartBeatCounter[1] >= heartBeatCounter[3]) )
+then
+	$targetPerson.setHeartBeatResult("Your Heart Rate is mostly in the Weight Loss zone, keep up the good work");
+end
+
+rule "Heart Rate  Diagnose - Aerobic"
+salience 30
+when
+    $targetPerson : TargetPerson(	heartBeatCounter[2] != null && 
+    								( heartBeatCounter[0] == null || heartBeatCounter[2] >= heartBeatCounter[0]) && 
+    								( heartBeatCounter[1] == null || heartBeatCounter[2] >= heartBeatCounter[1]) && 
+    								( heartBeatCounter[3] == null || heartBeatCounter[2] >= heartBeatCounter[3]) )
+then
+	$targetPerson.setHeartBeatResult("Your Heart Rate is mostly in the Aerobic zone");
+end
+
+rule "Heart Rate  Diagnose - Athletic"
+salience 30
+when
+    $targetPerson : TargetPerson(	heartBeatCounter[3] != null && 
+    								( heartBeatCounter[0] == null || heartBeatCounter[3] >= heartBeatCounter[0]) && 
+    								( heartBeatCounter[1] == null || heartBeatCounter[3] >= heartBeatCounter[1]) && 
+    								( heartBeatCounter[2] == null || heartBeatCounter[3] >= heartBeatCounter[2]) )
+then
+	$targetPerson.setHeartBeatResult("Your Heart Rate is mostly in the Athletic zone");
+end
+
+
+/**Insulin Pump Diagnose*/
+rule "Insulin Pump Diagnose - Blood Sugar too low"
+salience 30
+when
+    $targetPerson : TargetPerson(	insulinPumpCounter[0] != null && 
+    								( insulinPumpCounter[1] == null || insulinPumpCounter[0] >= insulinPumpCounter[1]) && 
+    								( insulinPumpCounter[2] == null || insulinPumpCounter[0] >= insulinPumpCounter[2]) )
+then
+	$targetPerson.setBreathRateResult("Blood Sugar too low, eat something");
+end
+
+rule "Insulin Pump Diagnose - Normal"
+salience 30
+when
+    $targetPerson : TargetPerson(	insulinPumpCounter[1] != null && 
+    								( insulinPumpCounter[0] == null || insulinPumpCounter[1] >= insulinPumpCounter[0]) && 
+    								( insulinPumpCounter[2] == null || insulinPumpCounter[1] >= insulinPumpCounter[2]) )
+then
+	$targetPerson.setInsulinPumpResult("Your blood sugar is normal");
+end
+
+rule "Insulin Pump Diagnose - Diabetes"
+salience 30
+when
+    $targetPerson : TargetPerson(	insulinPumpCounter[2] != null && 
+    								( insulinPumpCounter[0] == null || insulinPumpCounter[2] >= insulinPumpCounter[0]) && 
+    								( insulinPumpCounter[1] == null || insulinPumpCounter[2] >= insulinPumpCounter[1]) )
+then
+	$targetPerson.setInsulinPumpResult("Diabetes,take care, and  talk to your doctor");
+end
+
+
+
+/**Overall Diagnose*/
+
+rule "Perfectly Healthly"
+salience 10
+when
+    $targetPerson : TargetPerson(BloodPressureResult == "Your Blood Pressure is normal" && 
+    							 (InsulinPumpResult == "Your blood sugar is normal" || InsulinPumpResult == "Blood Sugar too low, eat something" )
+    							)
+then
+	$targetPerson.setOverallResult("You are perfectly healthly.. ");
+end
+
+/*Moderate */
+
+rule "Moderate Concerns"
+salience 10
+when
+    $targetPerson : TargetPerson((BloodPressureResult == "Your might have Prehypertension, please takecare" ||  BloodPressureResult ==  "Blood Pressure Diagnose - High Blood Pressure") &&
+    							 InsulinPumpResult != "Diabetes,take care, and  talk to your doctor" )
+then
+	$targetPerson.setOverallResult(" Adjust to a healthier lifestyle, and have regular medical check ups. ");
+end
+
+
+/*Diabetes */
+
+rule "Diabetes Concerns"
+salience 10
+when
+    $targetPerson : TargetPerson(InsulinPumpResult == "Diabetes,take care, and  talk to your doctor" )
+then
+	$targetPerson.setOverallResult(" Start exercising and becareful what you eat.. seriously ");
+end
+
+/*Hypertensive Crisis */
+
+rule "Hypertensive Crisis Concerns"
+salience 10
+when
+    $targetPerson : TargetPerson(InsulinPumpResult == "Diabetes,take care, and  talk to your doctor" )
+then
+	$targetPerson.setOverallResult(" Your blood pressure is way to high, book an appointment with your doctor NOW!  ");
+end
+
+
+rule "No Readings"
+salience 10
+when
+    $targetPerson : TargetPerson(bloodPressureCounter.size == 0 && 
+    							 heartBeatCounter.size == 0 &&
+    							 breathRateCounter.size == 0 &&
+    							 insulinPumpCounter.size == 0 )
+then
+	$targetPerson.setOverallResult("Please start reading before analyzing");
+end
+
+
+

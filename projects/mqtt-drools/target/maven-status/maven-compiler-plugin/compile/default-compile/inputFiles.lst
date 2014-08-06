@@ -1,0 +1,8 @@
+/Users/christina/Desktop/iot-demo/projects/mqtt-drools/src/main/java/org/blogdemo/mqtt/Processor/MQTTContentProcessor.java
+/Users/christina/Desktop/iot-demo/projects/mqtt-drools/src/main/java/org/blogdemo/mqtt/model/BreathRate.java
+/Users/christina/Desktop/iot-demo/projects/mqtt-drools/src/main/java/org/blogdemo/mqtt/model/HeartBeat.java
+/Users/christina/Desktop/iot-demo/projects/mqtt-drools/src/main/java/org/blogdemo/mqtt/model/TargetPerson.java
+/Users/christina/Desktop/iot-demo/projects/mqtt-drools/src/main/java/org/blogdemo/mqtt/model/BloodPressure.java
+/Users/christina/Desktop/iot-demo/projects/mqtt-drools/src/main/java/org/blogdemo/mqtt/Processor/DiagnosesProcessor.java
+/Users/christina/Desktop/iot-demo/projects/mqtt-drools/src/main/java/org/blogdemo/mqtt/model/InsulinPump.java
+/Users/christina/Desktop/iot-demo/projects/mqtt-drools/src/main/java/org/blogdemo/mqtt/model/DiagnoseResult.java

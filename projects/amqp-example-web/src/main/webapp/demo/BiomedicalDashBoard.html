@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>JBoss A-MQ Biomedical Signals Sensors with AMQP</title>
+  <link rel="stylesheet" href="/resources/ui/1.10.4/themes/smoothness/jquery-ui.css">
+  <link href="/resources/ui/examples.css" rel="stylesheet" type="text/css">
+  <script src="/resources/js/jquery-1.10.2.js"></script>
+  <script src="/resources/js/jquery.flot.min.js"></script>
+  <script src="/resources/js/jquery.flot.resize.min.js"></script>
+  <script src="/resources/js/jquery.flot.time.min.js"></script>
+  <script src="/resources/ui/1.10.4/jquery-ui.js"></script>
+  
+  <link rel="stylesheet" href="/resources/demos/style.css">
+ 
+  <style>
+  img{
+    text-align: center; 
+  }
+  div.startclass{
+  	border-width:5px;	
+	border-style:dashed;
+	text-align: center;
+	vertical-align: middle;
+  }
+  </style>
+  
+  <script>
+
+  
+  $(function() {
+	  	$( "#tabs" ).tabs();
+	  	var heartBeatData = new Array();
+	  	var breathRateData = new Array();
+	  	var bloodPressureData = new Array();
+	  	var insulinPumpData = new Array();
+	  	
+		var heartRatePlot = $.plot("#HeartRateHolder", [heartBeatData], {
+			xaxis: {
+				mode: "time",
+				inTickSize: [1, "second"]
+			},yaxis: {
+				min: 60,
+				max: 200
+			}
+		});
+
+		var breathRatePlot = $.plot("#BreathRateHolder", [breathRateData], {
+			xaxis: {
+				mode: "time",
+				inTickSize: [1, "second"]
+			},yaxis: {
+				min: 5,
+				max: 30
+			}
+		});
+		
+		
+		
+		var bloodPressurePlot = $.plot("#BloodPressureHolder", [bloodPressureData], {
+			xaxis: {
+				mode: "time",
+				inTickSize: [1, "second"]
+			},yaxis: {
+				min: 70,
+				max: 150
+			}
+		});
+		
+		var insulinPumpPlot = $.plot("#InsulinPumpHolder", [insulinPumpData], {
+			xaxis: {
+				mode: "time",
+				inTickSize: [1, "second"]
+			},yaxis: {
+				min: 0,
+				max: 25
+			}
+		});
+
+	 
+	  	var ws = new WebSocket("ws://localhost:8282/WSServlet");
+	  	
+
+	  	ws.onopen = function() {ws.send("DONTSTART");};
+	  	
+
+	  	ws.onmessage = function (evt) {processData(evt.data); heartRatePlot.draw();breathRatePlot.draw();bloodPressurePlot.draw();insulinPumpPlot.draw();};
+
+	  	ws.onclose = function() { location.reload();};
+		ws.onerror = function(err) {alert("Error: " + err);};
+
+	 
+	  	var processData = function(data) {
+
+		  	console.log(data);
+			var resultData = jQuery.parseJSON(data);
+			
+			var heartBeatCoord = getCoordinate(resultData.heartBeat);
+			var breathRateCoord = getCoordinate(resultData.breathRate);
+			var bloodPressureCoord = getCoordinate(resultData.bloodPressure);
+			var insulinPumpCoord = getCoordinate(resultData.insulinPump);
+			
+			if(heartBeatCoord != null){
+				heartBeatData.push(heartBeatCoord);
+				console.log("heartBeatData result:["+heartBeatData+"]");
+				heartRatePlot.setData([heartBeatData]);
+				if(heartRatePlot.getXAxes()[0].max < heartBeatCoord[0]){heartRatePlot.setupGrid();}
+			}
+			if(breathRateCoord != null){
+				breathRateData.push(breathRateCoord);
+				console.log("breathRateData result:["+breathRateData+"]");
+				breathRatePlot.setData([breathRateData]);
+				if(breathRatePlot.getXAxes()[0].max < breathRateCoord[0]){breathRatePlot.setupGrid();}
+			}
+			
+			if(bloodPressureCoord != null){
+				bloodPressureData.push(bloodPressureCoord);
+				console.log("bloodPressureData result:["+bloodPressureData+"]");
+				bloodPressurePlot.setData([bloodPressureData]);
+				if(bloodPressurePlot.getXAxes()[0].max < bloodPressureCoord[0]){bloodPressurePlot.setupGrid();}
+			}
+
+			if(insulinPumpCoord != null){
+				insulinPumpData.push(insulinPumpCoord);
+				console.log("insulinPumpData result:["+insulinPumpData+"]");
+				insulinPumpPlot.setData([insulinPumpData]);
+				if(insulinPumpPlot.getXAxes()[0].max < insulinPumpCoord[0]){insulinPumpPlot.setupGrid();}
+			}
+			
+	  	};
+
+	  	var getCoordinate = function(inputData){
+		  	
+			if(inputData != null && "null,null"!=inputData){
+				var result = inputData.split(',') 
+				var coordinate = new Array();
+				coordinate.push(result[0].trim()); 
+				coordinate.push(result[1].trim()); 
+				return coordinate;
+			}else
+				return null;
+			
+		}
+
+
+	  	$("#starter").submit(function(event) {
+
+	  	    /* Stop form from submitting normally */
+	  	    event.preventDefault();
+
+	  	    
+
+	  	    /* Clear result div*/
+	  	    $("#starterResult").html('');
+
+	  	 
+	  	 	
+
+	  	    /* Get some values from elements on the page: */
+	  	    var values = $(this).serialize();
+
+	  	    /* Send the data using post and put the results in a div */
+	  	    $.ajax({
+	  	        url: "/ProducerServlet",
+	  	        type: "post",
+	  	        data: values,
+	  	        success: function(){
+	  	        	if($('input[name="willStart"]').val() =="Start"){
+	  	          		ws.send("startReading");
+		  	          	$('input[name="produceButton"]').val('Stop');
+	  					$('input[name="willStart"]').val('Stop');
+	  	          	}else{
+		  	          	ws.send("stopReading");
+	  	          		
+		  	          	$('input[name="produceButton"]').val('Start');
+	  					$('input[name="willStart"]').val('Start');
+		  	        }
+	  	           
+	  	        },
+	  	        error:function(){
+	  	            alert("failure");
+	  	            
+	  	        }
+	  	    });
+
+	  	  	
+	  	});
+	  	
+	  	$("#diagnosesForm").submit(function(event) {
+
+	  	    /* Stop form from submitting normally */
+	  	    event.preventDefault();  	 	
+
+	  	  	/* Clear result div*/
+	  	    $("#diagnosesResult").html('');
+	  	    /* Get some values from elements on the page: */
+	  	    var values = $(this).serialize();
+
+
+	  	    /* Send the data using post and put the results in a div */
+	  	    $.ajax({
+	  	        url: "/DiagnoseServlet",
+	  	        type: "post",
+	  	        data: values,
+	  	        success: function(data, textStatus, jqXHR){
+	  	        	
+	  	        	$("#diagnosesResult").html(data['bloodPressureResult'] + "<BR/>"+
+	  	        			data['heartBeatResult'] + "<BR/>"+
+	  	        			data['insulinPumpResult'] + "<BR/>"+
+	  	        			data['breathRateResult'] + "<BR/>"+
+	  	        			data['overallResult'] + "<BR/>");
+	  	        },
+	  	        error:function(){
+	  	            alert("failure");
+	  	            
+	  	        }
+	  	    });
+		  	 	  	  	
+	  	});		
+
+		//Set Graph Canvas to Resizable
+		$(".demo-container").resizable({
+			maxWidth: 900,
+			maxHeight: 500,
+			minWidth: 450,
+			minHeight: 250
+		});
+
+
+		
+  });
+
+  
+  </script>
+</head>
+<body>
+<P>
+<h2>&nbsp;&nbsp;&nbsp;JBoss A-MQ 6.1 and JBoss BRMS 6.0</h2>
+<h1>&nbsp;Biomedical Signals Sensor Monitor DashBoard with AMQP</h1>
+</P>
+
+
+
+<div id="tabs">
+
+<ul>
+	<li><a href="#Explanation">Explanation</a></li>
+    <li><a href="#HeartRate">Heart Rate</a></li>
+    <li><a href="#BreathRate">Breath Rate</a></li>
+    <li><a href="#BloodPressure">Blood Pressure</a></li>
+    <li><a href="#InsulinPump">Insulin Pump</a></li>
+    <li><a href="#Diagnoses">Diagnoses</a></li>
+  </ul>
+  
+  <div id="Explanation" class="displayed">
+  	
+  	<div id="StartDIV" class="startclass">
+  	<BR/>
+  	<img src="AMQ-Sensor.png" >
+  	<form id="starter">
+	    <h2><label for="labelfStarter">&nbsp;&nbsp;Start Collecting Data</label></h2>
+	    <BR/>
+	    <input type="hidden" name="willStart" value="Start" />
+	    <input type="hidden" name="targetName" value="USER_ONE" />
+	    <input type="submit" class="fsSubmitButton" name="produceButton" value="Start" />	
+	    <BR/><BR/>
+	     
+	</form>
+	</div>
+  </div>
+  
+  <!-- Heart Rate (Heart Rate BPM) Every 5 Sec-->
+  <div id="HeartRate">
+  	<BR/>
+  	<h2><label>Heart Rate</label></h2>
+    <div class="demo-container">
+			<div id="HeartRateHolder" class="demo-placeholder"></div>
+  	</div>
+  </div>
+  <!-- Breath Rate Every 5 Sec -->
+  <div id="BreathRate">
+  	<BR/>
+  	<h2><label>Breath Rate</label></h2>
+    <div class="demo-container">
+			<div id="BreathRateHolder" class="demo-placeholder"></div>
+   </div>
+  </div>
+  <!-- Blood Pressure 5 Sec -->
+  <div id="BloodPressure">
+  	<BR/>
+  	<h2><label>Blood Pressure</label></h2>  
+    <div class="demo-container">
+			<div id="BloodPressureHolder" class="demo-placeholder"></div>
+	</div>
+  </div>
+  <!-- Insulin Pump 5 Sec -->
+  <div id="InsulinPump">
+  	<BR/>
+  	<h2><label>Insulin Pump</label></h2>    
+      <div class="demo-container">
+		<div id="InsulinPumpHolder" class="demo-placeholder"></div>
+   </div>
+  </div>
+  
+  <!-- Diagnoses Page -->
+  <div id="Diagnoses">
+  	<BR/>
+  	<h2><label>Diagnoses</label></h2>    
+    <div class="demo-container" align="center">
+    <form id="diagnosesForm">
+		<h2><label for="labelfStarter">Diagnoses Me</label></h2><BR/>
+		<input type="submit" class="fsSubmitButton" name="produceButton" value="Start" />
+		<BR/>
+		<BR/>
+		<BR/>	
+		<div id="diagnosesResult">
+		</div>		
+	</form>
+   	</div>
+  </div>
+ </div>
+
+</body>
+</html>

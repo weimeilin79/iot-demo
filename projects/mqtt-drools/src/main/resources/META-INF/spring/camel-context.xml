@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:kie="http://drools.org/schema/kie-spring"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd
+       http://drools.org/schema/kie-spring         http://localhost/org/kie/spring/kie-spring-6.0.0.xsd">
+   
+  <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+      <property name="brokerURL" value="tcp://localhost:61616"/>
+      <property name="userName" value="admin"/>
+      <property name="password" value="admin"/>
+  </bean>
+   
+  <bean id="MQTTContentProcessor" class="org.blogdemo.mqtt.Processor.MQTTContentProcessor"/>
+  <bean id="DiagnosesProcessor" class="org.blogdemo.mqtt.Processor.DiagnosesProcessor"/>
+  <bean id="kiePostProcessor" class="org.kie.spring.KModuleBeanFactoryPostProcessor"/>
+  
+  <kie:kmodule id="drools-camel-server">
+    <kie:kbase name="kbase1" packages="drl">
+      <kie:ksession name="ksession1" type="stateless">
+      	<kie:batch>
+	      <kie:set-global identifier="list" >
+	        <bean class="java.util.ArrayList" />
+	      </kie:set-global>
+	    </kie:batch>
+      </kie:ksession>
+    </kie:kbase>
+  </kie:kmodule>
+  
+  <camelContext xmlns="http://camel.apache.org/schema/spring">
+ 	<dataFormats>
+    	<json id="jack" library="Jackson" unmarshalTypeName="org.blogdemo.mqtt.model.DiagnoseResult"/>
+	</dataFormats>
+    <route trace="false" id="bloodPressureRoute" >
+        <from uri="activemq:topic:topic.bloodPressure"/>
+        <bean method="processBloodPressure" ref="MQTTContentProcessor"/>
+        <log message="Start bloodPressureRoute  ==${body}=="/>
+        <to uri="kie:ksession1?action=insertBody" />        
+        <log message="Single Reading Diagnose for Blood Pressure==${body}=="/>
+        <bean method="bloodPressureCount" ref="DiagnosesProcessor"/>
+    </route>
+     
+    <route trace="false" id="breathRateRoute" >
+        <from uri="activemq:topic:topic.breathRate"/>
+        <bean method="processBreathRate" ref="MQTTContentProcessor"/>
+        <log message="Start breathRateRoute  "/>
+        <to uri="kie:ksession1?action=insertBody" />
+        <log message="Single Reading Diagnose for Breath Rate ==${body}=="/>
+        <bean method="breathRateCount" ref="DiagnosesProcessor"/>
+    </route>
+    
+    <route trace="false" id="heartBeatRoute" >
+        <from uri="activemq:topic:topic.heartBeat"/>
+        <bean method="processHeartBeat" ref="MQTTContentProcessor"/>
+        <log message="Start heartBeatRoute  ==${body}=="/>
+        <to uri="kie:ksession1?action=insertBody" />
+        <log message="Single Reading Diagnose for Heart Beat==${body}=="/> 
+        <bean method="heartBeatCount" ref="DiagnosesProcessor"/>       
+    </route>
+    
+    <route trace="false" id="insulinPumpRoute" >
+        <from uri="activemq:topic:topic.insulinPump"/>
+        <bean method="processInsulinPump" ref="MQTTContentProcessor"/>
+        <log message="Start insulinPumpRoute  ==${body}=="/>
+        <to uri="kie:ksession1?action=insertBody" />
+        <log message="Single Reading Diagnose for Insulin Pump ==${body}=="/> 
+        <bean method="insulinPumpCount" ref="DiagnosesProcessor"/>       
+   </route>
+       
+   <route trace="false" id="diagnoseRoute" >
+    	<from uri="activemq:queue:queue.DiagnoseRequest"/>
+    	<!-- Mock and Test  -->
+		<!-- <bean method="bloodPressureTestHelper" ref="DiagnosesProcessor"/>-->
+		<bean method="getCurrentStatus" ref="DiagnosesProcessor"/>      	
+    	<to uri="kie:ksession1?action=insertBody" />
+    	<to uri="kie:ksession1?action=insertBody" />
+    	<bean method="getResult" ref="DiagnosesProcessor"/>
+    	<marshal ref="jack" />
+    	<convertBodyTo type="java.lang.String"/>
+    	<log message="\nSending Result\n========================== \n${body}"/>
+    	<removeHeaders pattern="JMS*" />
+    	<to uri="activemq:queue:queue.DiagnoseResult"/>
+    </route>
+  </camelContext>
+
+</beans>

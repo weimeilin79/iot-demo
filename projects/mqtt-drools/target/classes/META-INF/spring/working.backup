@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:kie="http://drools.org/schema/kie-spring"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd
+       http://drools.org/schema/kie-spring         org/kie/spring/kie-spring-2.0.0.xsd">
+  
+  <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+      <property name="brokerURL" value="tcp://localhost:61616"/>
+      <property name="userName" value="admin"/>
+      <property name="password" value="admin"/>
+  </bean>
+  
+  <bean id="MQTTContentProcessor" class="org.blogdemo.mqtt.Processor.MQTTContentProcessor"/>
+  <bean id="DiagnosesProcessor" class="org.blogdemo.mqtt.Processor.DiagnosesProcessor"/>
+  
+	  <kie:ksession-ref id="ksession1">
+	    <kie:batch>
+	      <kie:set-global identifier="list" >
+	        <bean class="java.util.ArrayList" />
+	      </kie:set-global>
+	    </kie:batch>
+	  </kie:ksession-ref> 
+  
+
+  <!-- Camel Route -->
+  <!--  <route trace="false" id="ruleOnBody" >
+        <description>This route shows an example of passing (inserting) the Body of the message as a POJO to Drools
+        for execution
+      </description>
+        <from uri="direct://ruleOnBody"/>
+        <to uri="kie:ksession1?action=insertBody">
+            <description>valid 'action' values are:
+          'execute' that takes a 'Command' object (default)
+          'insertBody' that inserts the Exchange.in.body, and executes rules
+          'insertMessage' that inserts the Exchange.in (type org.apache.camel.Message), and executes rules
+          'insertExchange' that inserts the Exchange (type org.apache.camel.Exchange), and executes rules
+        </description>
+        </to> 
+    </route>
+    <route trace="false" id="ruleOnCommand" >
+        <description>This route shows an example of creating a Drools Command wrapping the Body of the message with
+        the help of the custom DroolsCommandHelperBean (included in this project), and passing this Drools
+        Command to the ruleset for execution.
+      </description>
+        <from uri="direct://ruleOnCommand"/>
+        <bean method="insertAndFireAll" ref="droolsHelper"/>
+        <to uri="kie:ksession1?action=execute">
+            <description>valid 'action' values are:
+          'execute' that takes a 'Command' object (default)
+          'insertBody' that inserts the Exchange.in.body, and executes rules
+          'insertMessage' that inserts the Exchange.in (type org.apache.camel.Message), and executes rules
+          'insertExchange' that inserts the Exchange (type org.apache.camel.Exchange), and executes rules
+        </description>
+        </to>
+    </route>-->
+ 	<camelContext xmlns="http://camel.apache.org/schema/spring">
+ 	<dataFormats>
+    	<json id="jack" library="Jackson" unmarshalTypeName="org.blogdemo.mqtt.model.DiagnoseResult"/>
+	</dataFormats>
+    <route trace="false" id="bloodPressureRoute" >
+        <from uri="activemq:topic:topic.bloodPressure"/>
+        <log message="Start bloodPressureRoute  ==${body}=="/>
+        <bean method="processBloodPressure" ref="MQTTContentProcessor"/>
+        <to uri="kie:ksession1?action=insertBody" />
+        <log message="Single Reading Diagnose for Blood Pressure==${body}=="/>
+        <bean method="bloodPressureCount" ref="DiagnosesProcessor"/>
+    </route>
+    
+    <route trace="false" id="breathRateRoute" >
+        <from uri="activemq:topic:topic.breathRate"/>
+        <log message="Start breathRateRoute  "/>
+        <bean method="processBreathRate" ref="MQTTContentProcessor"/>
+        <to uri="kie:ksession1?action=insertBody" />
+        <log message="Single Reading Diagnose for Breath Rate ==${body}=="/>
+        <bean method="breathRateCount" ref="DiagnosesProcessor"/>
+    </route>
+    
+    <route trace="false" id="heartBeatRoute" >
+        <from uri="activemq:topic:topic.heartBeat"/>
+        <log message="Start heartBeatRoute  ==${body}=="/>
+        <bean method="processHeartBeat" ref="MQTTContentProcessor"/>
+        <to uri="kie:ksession1?action=insertBody" />
+        <log message="Single Reading Diagnose for Heart Beat==${body}=="/> 
+        <bean method="heartBeatCount" ref="DiagnosesProcessor"/>       
+    </route>
+    
+    <route trace="false" id="insulinPumpRoute" >
+        <from uri="activemq:topic:topic.insulinPump"/>
+        <log message="Start insulinPumpRoute  ==${body}=="/>
+        <bean method="processInsulinPump" ref="MQTTContentProcessor"/>
+        <to uri="kie:ksession1?action=insertBody" />
+        <log message="Single Reading Diagnose for Insulin Pump ==${body}=="/> 
+        <bean method="insulinPumpCount" ref="DiagnosesProcessor"/>       
+   </route>
+    
+   <route trace="false" id="diagnoseRoute" >
+    	<!-- activemq:queue:queue.DiagnoseRequest  -->
+    	<from uri="activemq:queue:queue.DiagnoseRequest"/>
+		<bean method="getCurrentStatus" ref="DiagnosesProcessor"/>   	
+    	<to uri="kie:ksession1?action=insertBody" />
+    	<to uri="kie:ksession1?action=insertBody" />
+    	<bean method="getResult" ref="DiagnosesProcessor"/>
+    	<marshal ref="jack" />
+    	<convertBodyTo type="java.lang.String"/>
+    	<log message="\nSending Result\n========================== \n${body}"/>
+    	<removeHeaders pattern="JMS*"/>
+    	<to uri="activemq:queue:queue.DiagnoseResult"/>
+    </route>
+   
+    
+	</camelContext>
+
+</beans>
