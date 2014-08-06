@@ -71,9 +71,7 @@
        
    <route trace="false" id="diagnoseRoute" >
     	<from uri="activemq:queue:queue.DiagnoseRequest"/>
-    	<!-- Mock and Test  -->
-		<!-- <bean method="bloodPressureTestHelper" ref="DiagnosesProcessor"/>-->
-		<bean method="getCurrentStatus" ref="DiagnosesProcessor"/>      	
+    	<bean method="bloodPressureTestHelper" ref="DiagnosesProcessor"/>
     	<to uri="kie:ksession1?action=insertBody" />
     	<to uri="kie:ksession1?action=insertBody" />
     	<bean method="getResult" ref="DiagnosesProcessor"/>
