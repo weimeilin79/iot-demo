@@ -28,7 +28,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <!--<drools.version>6.0.0.Beta3</drools.version>-->
-    <drools.version>6.1.0.Final</drools.version>
+    <drools.version>6.0.1.Final</drools.version>
     <!-- kie-camel uses this version of camel -->
     <!-- <camel.version>2.10.3</camel.version>-->
     <camel.version>2.10.3</camel.version>

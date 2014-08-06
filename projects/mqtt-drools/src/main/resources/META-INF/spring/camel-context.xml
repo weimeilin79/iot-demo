@@ -30,57 +30,53 @@
   </kie:kmodule>
   
   <camelContext xmlns="http://camel.apache.org/schema/spring">
- 	<dataFormats>
-    	<json id="jack" library="Jackson" unmarshalTypeName="org.blogdemo.mqtt.model.DiagnoseResult"/>
-	</dataFormats>
+    <dataFormats>
+        <json unmarshalTypeName="org.blogdemo.mqtt.model.DiagnoseResult" library="Jackson" id="jack"/>
+    </dataFormats>
     <route trace="false" id="bloodPressureRoute" >
         <from uri="activemq:topic:topic.bloodPressure"/>
         <bean method="processBloodPressure" ref="MQTTContentProcessor"/>
         <log message="Start bloodPressureRoute  ==${body}=="/>
-        <to uri="kie:ksession1?action=insertBody" />        
+        <to uri="kie:ksession1?action=insertBody"/>
         <log message="Single Reading Diagnose for Blood Pressure==${body}=="/>
         <bean method="bloodPressureCount" ref="DiagnosesProcessor"/>
     </route>
-     
     <route trace="false" id="breathRateRoute" >
         <from uri="activemq:topic:topic.breathRate"/>
         <bean method="processBreathRate" ref="MQTTContentProcessor"/>
         <log message="Start breathRateRoute  "/>
-        <to uri="kie:ksession1?action=insertBody" />
+        <to uri="kie:ksession1?action=insertBody"/>
         <log message="Single Reading Diagnose for Breath Rate ==${body}=="/>
         <bean method="breathRateCount" ref="DiagnosesProcessor"/>
     </route>
-    
     <route trace="false" id="heartBeatRoute" >
         <from uri="activemq:topic:topic.heartBeat"/>
         <bean method="processHeartBeat" ref="MQTTContentProcessor"/>
         <log message="Start heartBeatRoute  ==${body}=="/>
-        <to uri="kie:ksession1?action=insertBody" />
-        <log message="Single Reading Diagnose for Heart Beat==${body}=="/> 
-        <bean method="heartBeatCount" ref="DiagnosesProcessor"/>       
+        <to uri="kie:ksession1?action=insertBody"/>
+        <log message="Single Reading Diagnose for Heart Beat==${body}=="/>
+        <bean method="heartBeatCount" ref="DiagnosesProcessor"/>
     </route>
-    
-    <route trace="false" id="insulinPumpRoute" >
+    <route trace="false" id="insulinPumpRoute">
         <from uri="activemq:topic:topic.insulinPump"/>
         <bean method="processInsulinPump" ref="MQTTContentProcessor"/>
         <log message="Start insulinPumpRoute  ==${body}=="/>
-        <to uri="kie:ksession1?action=insertBody" />
-        <log message="Single Reading Diagnose for Insulin Pump ==${body}=="/> 
-        <bean method="insulinPumpCount" ref="DiagnosesProcessor"/>       
-   </route>
-       
-   <route trace="false" id="diagnoseRoute" >
-    	<from uri="activemq:queue:queue.DiagnoseRequest"/>
-    	<bean method="bloodPressureTestHelper" ref="DiagnosesProcessor"/>
-    	<to uri="kie:ksession1?action=insertBody" />
-    	<to uri="kie:ksession1?action=insertBody" />
-    	<bean method="getResult" ref="DiagnosesProcessor"/>
-    	<marshal ref="jack" />
-    	<convertBodyTo type="java.lang.String"/>
-    	<log message="\nSending Result\n========================== \n${body}"/>
-    	<removeHeaders pattern="JMS*" />
-    	<to uri="activemq:queue:queue.DiagnoseResult"/>
+        <to uri="kie:ksession1?action=insertBody"/>
+        <log message="Single Reading Diagnose for Insulin Pump ==${body}=="/>
+        <bean method="insulinPumpCount" ref="DiagnosesProcessor"/>
     </route>
-  </camelContext>
+    <route trace="false" id="diagnoseRoute">
+        <from uri="activemq:queue:queue.DiagnoseRequest"/>
+        <bean method="getCurrentStatus" ref="DiagnosesProcessor"/>
+        <to uri="kie:ksession1?action=insertBody"/>
+        <to uri="kie:ksession1?action=insertBody"/>
+        <bean method="getResult" ref="DiagnosesProcessor"/>
+        <marshal ref="jack"/>
+        <convertBodyTo type="java.lang.String"/>
+        <log message="\nSending Result\n========================== \n${body}"/>
+        <removeHeaders pattern="JMS*"/>
+        <to uri="activemq:queue:queue.DiagnoseResult"/>
+    </route>
+</camelContext>
 
 </beans>
